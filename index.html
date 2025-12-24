@@ -250,30 +250,6 @@
                     </p>
                 </div>
 
-                <div class="card mb-4">
-                    <header class="card-header">
-                        <p class="card-header-title">運轉條件設定</p>
-                    </header>
-                    <div class="card-content">
-                        <div class="field mb-3">
-                            <label class="label">目前總負載 (RT)</label>
-                            <input class="input" type="number" id="in-load" value="214" placeholder="輸入 RT">
-                        </div>
-                        <div class="field">
-                            <label class="label">目前主機狀態</label>
-                            <div class="select is-fullwidth">
-                                <select id="in-status">
-                                    <option value="2s" selected>2台小冰</option>
-                                    <option value="1s">1台小冰</option>
-                                    <option value="1b">1台大冰</option>
-                                    <option value="1b1s">1大 + 1小</option>
-                                    <option value="1b2s">1大 + 2小</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="card">
                     <header class="card-header">
                         <p class="card-header-title">📷 AI 視覺分析</p>
@@ -566,38 +542,32 @@
         function runRuleEngine() {
             try {
                 const h = globalWeather.enthalpy;
-                const load = parseFloat(document.getElementById('in-load').value) || 0;
-                const status = document.getElementById('in-status').value;
 
                 let color = "#bdc3c7";
                 let title = "等待條件...";
                 let content = "";
 
-                // --- 您的 5+1 條規則 ---
+                // --- 根據焓值自動判斷規則 ---
                 if (h >= 95) {
                     color = "#8e44ad";
                     title = `【極限負載】 外氣焓值 ${h} (≧ 95)`;
                     content = `<ul><li>運轉建議：<span class="tag-machine">1台大冰</span> + <span class="tag-machine">2台小冰</span> (全開)。</li><li>指令：確保散熱效率最大化。</li></ul>`;
+                } else if (h >= 85 && h <= 94) {
+                    color = "#c0392b";
+                    title = `【規則 4】 外氣焓值 ${h} (85~94)`;
+                    content = `<ul><li>運轉建議：<span class="tag-machine">1台大冰</span> (100%) + 加開 <span class="tag-machine">4號小冰</span>。</li><li>水泵：大泵48Hz，小泵40~42Hz。</li></ul>`;
+                } else if (h >= 72 && h <= 84) {
+                    color = "#e67e22";
+                    title = `【規則 3】 外氣焓值 ${h} (72~84)`;
+                    content = `<ul><li>操作指令：<span class="tag-action">切換至一台大冰</span> (1號或2號)。</li><li>水泵：上限 48Hz。</li></ul>`;
+                } else if (h >= 56 && h < 72) {
+                    color = "#2980b9";
+                    title = `【規則 2】 外氣焓值 ${h} (56~71)`;
+                    content = `<ul><li>運轉建議：<span class="tag-machine">4號小冰</span> + <span class="tag-machine">加開 5號小冰</span>。</li><li>水泵：上限 40Hz。</li></ul>`;
                 } else if (h < 56) {
                     color = "#27ae60";
                     title = `【規則 1】 外氣焓值 ${h} (< 56)`;
                     content = `<ul><li>運轉建議：<span class="tag-machine">4號小冰</span> 單獨運轉。</li><li>水泵：上限 45Hz。</li></ul>`;
-                } else if (h >= 72 && h <= 75) {
-                    color = "#e67e22";
-                    title = `【規則 3】 外氣焓值 ${h} (72~75)`;
-                    content = `<ul><li>操作指令：<span class="tag-action">切換至一台大冰</span> (1號或2號)。</li><li>水泵：上限 48Hz。</li></ul>`;
-                } else if (h >= 85 && h <= 88) {
-                    color = "#c0392b";
-                    title = `【規則 4】 外氣焓值 ${h} (85~88)`;
-                    content = `<ul><li>運轉建議：<span class="tag-machine">1台大冰</span> (100%) + 加開 <span class="tag-machine">4號小冰</span>。</li><li>水泵：大泵48Hz，小泵40~42Hz。</li></ul>`;
-                } else if (h <= 80 && status === '1b1s') {
-                    color = "#16a085";
-                    title = `【規則 5】 焓值降至 ${h} (卸載)`;
-                    content = `<ul><li>操作指令：目前為一大一小，<span class="tag-action">可卸載 1 台小冰</span>。</li><li>目標：維持一台大冰。</li></ul>`;
-                } else if (h >= 56) {
-                    color = "#2980b9";
-                    title = `【規則 2】 外氣焓值 ${h} (≧ 56)`;
-                    content = `<ul><li>運轉建議：4號小冰 + <span class="tag-machine">加開 5號小冰</span>。</li><li>水泵：上限 40Hz。</li></ul>`;
                 }
 
                 document.getElementById("rule-output").innerHTML = `
@@ -609,8 +579,6 @@
             } catch (e) { console.error("規則運算錯誤:", e); }
         }
 
-        document.getElementById('in-load').addEventListener('input', runRuleEngine);
-        document.getElementById('in-status').addEventListener('change', runRuleEngine);
 
         // ==========================================
         // 2. 天氣初始化 (手機版修正 - 完整錯誤處理)
