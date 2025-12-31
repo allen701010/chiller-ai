@@ -841,18 +841,18 @@
 
             try {
                 const prompt = `
-            你是一個冰水主機專家。請分析這張 SCADA 畫面。
-            
-            定義：綠燈=運轉中，其他顏色=停止。
-            條件：目前外氣焓值 ${globalWeather.enthalpy} kJ/kg，溫度 ${globalWeather.temp}°C，濕度 ${globalWeather.hum}%。
-            
-            請回答：
-            1. 圖片中哪些主機正在運轉（亮綠燈）？
-            2. 圖片中顯示的負載數值是多少？
-            3. 有無紅燈警報或異常狀態？
-            4. 根據目前焓值 ${globalWeather.enthalpy}，運轉台數是否符合節能邏輯？
+            請快速判讀這張冰水主機 SCADA 畫面。
 
-            請用繁體中文回答，條理清晰。
+            【任務】只需判斷 CHU-G01、CHU-G02、CHU-G03、CHU-G04、CHU-G05 這五台主機的運轉狀態。
+            【判斷標準】亮綠燈 = 運轉中，非綠燈 = 停止。
+            
+            【目前條件】焓值 ${globalWeather.enthalpy} kJ/kg
+
+            請用以下格式回答：
+            ✅ 運轉中：CHU-Gxx, CHU-Gxx（列出亮綠燈的主機）
+            ⏸️ 停止中：CHU-Gxx（列出非綠燈的主機）
+            📊 運轉台數：X 台
+            💡 節能建議：根據焓值 ${globalWeather.enthalpy}，簡短說明是否符合節能邏輯。
             `;
 
                 const result = await tryAnalysisRecursive(0, prompt);
