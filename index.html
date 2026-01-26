@@ -1,0 +1,2395 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>🧊 冰水主機 AI 專家系統</title>
+
+    <!-- PWA 設定 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#006266">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="冰水AI">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" href="icon-192.png">
+
+    <!-- 版本號管理：更新時修改此版本號，瀏覽器會自動載入新版本 -->
+    <meta name="app-version" content="1.2.5">
+    <script>
+        // 自動版本號：使用當前時間戳（開發時）或固定版本號（上線時）
+        const APP_VERSION = '1.2.5';  // 上線時手動更新此版本號
+        const DEV_MODE = false;       // 上線時改為 false
+        window.CACHE_BUSTER = DEV_MODE ? Date.now() : APP_VERSION;
+    </script>
+
+    <!-- 樣式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+
+
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: "Microsoft JhengHei", sans-serif;
+            padding-bottom: 80px;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #006266, #009432);
+            color: #fff;
+        }
+
+        .rule-box {
+            background-color: #fff;
+            border-left: 8px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .rule-title {
+            font-weight: 900;
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .rule-content {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .rule-content li {
+            margin-bottom: 8px;
+        }
+
+        .tag-machine {
+            background-color: #009432;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .tag-action {
+            color: #c0392b;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .weather-card {
+            background: linear-gradient(to right, #1289A7, #12CBC4);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .weather-val {
+            font-size: 1.6rem;
+            font-weight: bold;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.96);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .status-text {
+            margin-top: 15px;
+            color: #444;
+            font-weight: bold;
+        }
+
+        #preview-area {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+            background: #fff;
+            border: 3px dashed #cbd5e0;
+            border-radius: 8px;
+        }
+
+        .preview-item img {
+            max-width: 100%;
+            max-height: 350px;
+            border-radius: 6px;
+        }
+
+        .report-text {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            color: #2d3436;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        /* 預測卡片樣式 */
+        .forecast-card {
+            background: linear-gradient(135deg, #0984e3, #74b9ff);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .forecast-card .chart-container {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .forecast-card canvas {
+            width: 100%;
+            height: 150px;
+        }
+
+        .forecast-alert {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .forecast-alert.warning {
+            background: rgba(255, 193, 7, 0.3);
+            border-left: 4px solid #ffc107;
+        }
+
+        .forecast-alert.info {
+            background: rgba(46, 204, 113, 0.3);
+            border-left: 4px solid #2ecc71;
+        }
+
+        /* 提醒通知樣式 */
+        .reminder-card {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .reminder-card .countdown {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #ffeaa7;
+        }
+
+        .reminder-card .status-icon {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .reminder-card .status-icon.active {
+            background: #00b894;
+        }
+
+        .reminder-card .status-icon.inactive {
+            background: #d63031;
+        }
+
+        @keyframes bell-ring {
+
+            0%,
+            100% {
+                transform: rotate(0);
+            }
+
+            10%,
+            30%,
+            50% {
+                transform: rotate(15deg);
+            }
+
+            20%,
+            40% {
+                transform: rotate(-15deg);
+            }
+        }
+
+        .bell-animate {
+            animation: bell-ring 0.5s ease-in-out;
+        }
+
+        /* 進階對話視窗樣式 */
+        .chat-section {
+            margin-top: 20px;
+            border: 2px solid #009432;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #006266, #009432);
+            color: white;
+            padding: 12px 16px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-messages {
+            height: 300px;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+
+        .chat-bubble {
+            max-width: 85%;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            border-radius: 16px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            word-wrap: break-word;
+        }
+
+        .chat-bubble.user {
+            background: linear-gradient(135deg, #006266, #009432);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-bubble.ai {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-bubble.system {
+            background: #fff3cd;
+            color: #856404;
+            margin: 10px auto;
+            text-align: center;
+            font-size: 0.85rem;
+            max-width: 90%;
+        }
+
+        .chat-input-area {
+            display: flex;
+            padding: 12px;
+            background: white;
+            border-top: 1px solid #eee;
+            gap: 10px;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input-area input:focus {
+            border-color: #009432;
+        }
+
+        .chat-input-area button {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #006266, #009432);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .chat-input-area button:hover {
+            opacity: 0.9;
+        }
+
+        .chat-input-area button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px 12px;
+            background: #f0f0f0;
+            border-top: 1px solid #eee;
+        }
+
+        .quick-btn {
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            background: #009432;
+            color: white;
+            border-color: #009432;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 10px 14px;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #009432;
+            border-radius: 50%;
+            animation: typing 1s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(0.8);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <section class="hero is-small">
+        <div class="hero-body">
+            <div class="container">
+                <p class="title is-4"><i class="fas fa-industry"></i> 冰水主機 AI 專家系統</p>
+                <p class="subtitle is-6">SOP 規則 + AI 視覺判讀 (手機版)</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="container mt-4">
+        <div class="columns">
+
+            <div class="column is-4">
+
+                <div class="weather-card">
+                    <div class="level is-mobile mb-2">
+                        <div class="level-left"><strong><i class="fas fa-cloud-sun"></i> 外氣環境</strong></div>
+                        <div class="level-right"><button class="button is-small is-white is-outlined is-rounded"
+                                onclick="initWeather(true)">強制刷新</button></div>
+                    </div>
+                    <div class="columns is-mobile has-text-centered is-gapless">
+                        <div class="column"><small>溫度</small>
+                            <div id="w-temp" class="weather-val">--</div>
+                        </div>
+                        <div class="column"><small>濕度</small>
+                            <div id="w-hum" class="weather-val">--</div>
+                        </div>
+                        <div class="column"><small>焓值</small>
+                            <div id="w-h" class="weather-val" style="color:#ffeaa7;">--</div>
+                        </div>
+                    </div>
+                    <p id="location-status" class="help mt-2"
+                        style="color:#ffeaa7; font-size:0.8rem; text-align:center;">正在初始化...
+                    </p>
+                </div>
+
+                <!-- 定時提醒卡片 -->
+                <div class="reminder-card">
+                    <div class="level is-mobile mb-2">
+                        <div class="level-left">
+                            <strong><i class="fas fa-bell" id="bell-icon"></i> 定時提醒</strong>
+                        </div>
+                        <div class="level-right">
+                            <button class="button is-small is-warning is-outlined is-rounded mr-2"
+                                onclick="testPreAlert()" title="測試預警功能">🔮 預警</button>
+                            <button class="button is-small is-info is-outlined is-rounded mr-2" onclick="testReminder()"
+                                title="測試正式通知">⏰ 正式</button>
+                            <button class="button is-small is-white is-outlined is-rounded"
+                                onclick="testNotification()">🔔 測試</button>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <span class="status-icon" id="notif-status-icon"></span>
+                        <span id="notif-status-text">檢查中...</span>
+                    </div>
+                    <div>
+                        <small>下次提醒：</small>
+                        <span class="countdown" id="next-reminder">計算中...</span>
+                    </div>
+                    <p class="help mt-2" style="opacity:0.8; font-size:0.75rem;">
+                        ⏰ 每日 08:00、12:00 及 18:00 提醒分析
+                    </p>
+                </div>
+
+                <!-- 24小時焓值預測卡片 -->
+                <div class="forecast-card">
+                    <div class="level is-mobile mb-2">
+                        <div class="level-left">
+                            <strong><i class="fas fa-crystal-ball"></i> 🔮 未來 24 小時預測</strong>
+                        </div>
+                        <div class="level-right">
+                            <button class="button is-small is-warning is-outlined is-rounded mr-2"
+                                onclick="testForecastAlerts()" title="測試預警">
+                                🧪
+                            </button>
+                            <button class="button is-small is-white is-outlined is-rounded"
+                                onclick="refresh24HourForecast()">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="enthalpy-chart"></canvas>
+                    </div>
+                    <div id="forecast-alerts"></div>
+                    <p id="forecast-status" class="help mt-2"
+                        style="opacity:0.8; font-size:0.75rem; text-align:center;">
+                        正在載入預報資料...
+                    </p>
+                </div>
+
+                <div class="card">
+                    <header class="card-header">
+                        <p class="card-header-title">📷 AI 視覺分析</p>
+                    </header>
+                    <div class="card-content">
+                        <input class="input" type="file" id="inputImages" accept="image/*" />
+                        <div id="preview-area"><span class="has-text-grey">預覽區</span></div>
+
+                        <button id="analyze-button" class="button is-success is-fullwidth mt-4">
+                            <span class="icon"><i class="fas fa-search"></i></span>
+                            <span><strong>啟動 AI 分析</strong></span>
+                        </button>
+                        <button id="reset-key-button" class="button is-small is-ghost is-fullwidth mt-2">設定 API
+                            Key</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column is-8">
+
+                <h4 class="title is-5 mb-3">1. SOP 策略建議</h4>
+                <div id="rule-output">
+                    <div class="notification is-light">正在初始化...</div>
+                </div>
+
+                <hr>
+
+                <div class="card" style="position: relative; min-height: 200px;">
+                    <div class="loading-overlay" id="loading-overlay">
+                        <div class="button is-loading is-large is-white" style="border:none; background:transparent;">
+                        </div>
+                        <div id="loading-text" class="status-text">AI 分析中...</div>
+                    </div>
+
+                    <div class="card-content">
+                        <h4 class="title is-5 mb-3">2. AI 視覺驗證報告</h4>
+                        <div id="analysis-report" class="content report-text">
+                            <p class="has-text-grey-light">上傳圖片後點擊分析。AI 將判讀綠燈運轉狀態。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 進階 AI 對話區塊 -->
+                <div id="chat-section" class="chat-section" style="display: none;">
+                    <div class="chat-header">
+                        <span><i class="fas fa-comments"></i> 3. 進階 AI 對話</span>
+                        <button class="button is-small is-white is-outlined" onclick="clearChat()">
+                            <i class="fas fa-trash"></i> 清除對話
+                        </button>
+                    </div>
+                    <div id="chat-messages" class="chat-messages"></div>
+                    <div class="quick-questions" id="quick-questions">
+                        <button class="quick-btn" onclick="askQuickQuestion('為什麼建議這樣的運轉配置？')">💡 為什麼這樣配置？</button>
+                        <button class="quick-btn" onclick="askQuickQuestion('目前運轉是否符合節能原則？')">🌱 是否節能？</button>
+                        <button class="quick-btn" onclick="askQuickQuestion('有什麼需要注意的地方嗎？')">⚠️ 注意事項？</button>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input" placeholder="輸入您的問題..."
+                            onkeypress="handleChatKeypress(event)">
+                        <button id="chat-send" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i>
+                            發送</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 全域變數
+        // ==========================================
+        // ★ 手機版修正：預設值直接填入，避免 undefined 錯誤
+        let globalWeather = { temp: 26.5, hum: 60, enthalpy: 50 };
+        let userApiKey = localStorage.getItem("openrouter_key") || "";
+        let globalBase64 = null;
+
+        // ==========================================
+        // 定時提醒功能
+        // ==========================================
+        // 正式提醒時間
+        const REMINDER_TIMES = [
+            { hour: 8, minute: 0, label: '早上', type: 'reminder' },
+            { hour: 12, minute: 0, label: '中午', type: 'reminder' },
+            { hour: 18, minute: 0, label: '下午', type: 'reminder' }
+        ];
+        // 提前預警分析時間（提前 1 小時）
+        const PRE_ALERT_TIMES = [
+            { hour: 7, minute: 0, label: '早上預警', targetHour: 8 },
+            { hour: 11, minute: 0, label: '中午預警', targetHour: 12 },
+            { hour: 17, minute: 0, label: '下午預警', targetHour: 18 }
+        ];
+        let notificationPermission = 'default';
+        let lastNotifiedTime = localStorage.getItem('lastNotifiedTime') || '';
+
+        // 請求通知權限
+        async function requestNotificationPermission() {
+            const statusIcon = document.getElementById('notif-status-icon');
+            const statusText = document.getElementById('notif-status-text');
+
+            if (!('Notification' in window)) {
+                statusIcon.className = 'status-icon inactive';
+                statusText.textContent = '瀏覽器不支援通知';
+                return false;
+            }
+
+            if (Notification.permission === 'granted') {
+                notificationPermission = 'granted';
+                statusIcon.className = 'status-icon active';
+                statusText.textContent = '通知已啟用 ✓';
+                return true;
+            }
+
+            if (Notification.permission === 'denied') {
+                notificationPermission = 'denied';
+                statusIcon.className = 'status-icon inactive';
+                statusText.textContent = '通知被拒絕，請到設定開啟';
+                return false;
+            }
+
+            // 請求權限
+            try {
+                const permission = await Notification.requestPermission();
+                notificationPermission = permission;
+                if (permission === 'granted') {
+                    statusIcon.className = 'status-icon active';
+                    statusText.textContent = '通知已啟用 ✓';
+                    return true;
+                } else {
+                    statusIcon.className = 'status-icon inactive';
+                    statusText.textContent = '請允許通知以接收提醒';
+                    return false;
+                }
+            } catch (e) {
+                statusIcon.className = 'status-icon inactive';
+                statusText.textContent = '無法請求通知權限';
+                return false;
+            }
+        }
+
+        // 計算下次提醒時間
+        function getNextReminderTime() {
+            const now = new Date();
+            let nextReminder = null;
+
+            for (const time of REMINDER_TIMES) {
+                const reminderDate = new Date();
+                reminderDate.setHours(time.hour, time.minute, 0, 0);
+
+                if (reminderDate > now) {
+                    if (!nextReminder || reminderDate < nextReminder) {
+                        nextReminder = reminderDate;
+                    }
+                }
+            }
+
+            // 如果今天的提醒都過了，計算明天的第一個提醒
+            if (!nextReminder) {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const firstTime = REMINDER_TIMES.reduce((a, b) =>
+                    (a.hour * 60 + a.minute) < (b.hour * 60 + b.minute) ? a : b
+                );
+                tomorrow.setHours(firstTime.hour, firstTime.minute, 0, 0);
+                nextReminder = tomorrow;
+            }
+
+            return nextReminder;
+        }
+
+        // 格式化倒數計時
+        function formatCountdown(ms) {
+            if (ms <= 0) return '現在！';
+
+            const hours = Math.floor(ms / (1000 * 60 * 60));
+            const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+
+            if (hours > 0) {
+                return `${hours}時${minutes}分`;
+            } else if (minutes > 0) {
+                return `${minutes}分${seconds}秒`;
+            } else {
+                return `${seconds}秒`;
+            }
+        }
+
+        // ==========================================
+        // 音效系統
+        // ==========================================
+        let audioContext = null;
+
+        // 初始化音訊上下文
+        async function getAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            // 如果 AudioContext 被暫停（瀏覽器自動播放政策），嘗試恢復
+            if (audioContext.state === 'suspended') {
+                try {
+                    await audioContext.resume();
+                    console.log('🔊 AudioContext 已恢復');
+                } catch (e) {
+                    console.warn('無法恢復 AudioContext:', e);
+                }
+            }
+            return audioContext;
+        }
+
+        // 播放預警音效（急促警告音）
+        async function playWarningSound() {
+            try {
+                const ctx = await getAudioContext();
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+
+                oscillator.frequency.value = 880;  // 高音 A5
+                oscillator.type = 'square';
+
+                gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+
+                oscillator.start(ctx.currentTime);
+
+                // 急促的嗶嗶嗶聲
+                for (let i = 0; i < 3; i++) {
+                    gainNode.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.2);
+                    gainNode.gain.setValueAtTime(0, ctx.currentTime + i * 0.2 + 0.1);
+                }
+
+                oscillator.stop(ctx.currentTime + 0.6);
+                console.log('🔊 播放預警音效');
+            } catch (e) {
+                console.warn('無法播放音效', e);
+            }
+        }
+
+        // 播放正式通知音效（溫和鈴聲）
+        async function playReminderSound() {
+            try {
+                const ctx = await getAudioContext();
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+
+                oscillator.frequency.value = 523.25;  // 中音 C5
+                oscillator.type = 'sine';
+
+                gainNode.gain.setValueAtTime(0.4, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
+
+                oscillator.start(ctx.currentTime);
+                oscillator.stop(ctx.currentTime + 1);
+                console.log('🔔 播放正式通知音效');
+            } catch (e) {
+                console.warn('無法播放音效', e);
+            }
+        }
+
+        // 播放測試音效（短促提示音）
+        async function playTestSound() {
+            try {
+                const ctx = await getAudioContext();
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+
+                oscillator.frequency.value = 659.25;  // E5
+                oscillator.type = 'sine';
+
+                gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+
+                oscillator.start(ctx.currentTime);
+                oscillator.stop(ctx.currentTime + 0.3);
+                console.log('🎵 播放測試音效');
+            } catch (e) {
+                console.warn('無法播放音效', e);
+            }
+        }
+
+        // ==========================================
+        // 分頁標題閃爍提醒功能
+        // ==========================================
+        let titleFlashInterval = null;
+        const originalTitle = document.title;
+
+        // 開始閃爍標題（會在工作列的分頁上顯示）
+        function startTitleFlash(alertText) {
+            // 如果已經在閃爍，先停止
+            stopTitleFlash();
+
+            let isOriginal = true;
+            titleFlashInterval = setInterval(() => {
+                document.title = isOriginal ? alertText : originalTitle;
+                isOriginal = !isOriginal;
+            }, 500);  // 每 0.5 秒切換一次
+
+            console.log('🔔 開始分頁標題閃爍提醒');
+        }
+
+        // 停止閃爍標題
+        function stopTitleFlash() {
+            if (titleFlashInterval) {
+                clearInterval(titleFlashInterval);
+                titleFlashInterval = null;
+                document.title = originalTitle;
+                console.log('🔔 停止分頁標題閃爍提醒');
+            }
+        }
+
+        // 當頁面獲得焦點時停止閃爍
+        window.addEventListener('focus', stopTitleFlash);
+
+        // 發送通知（支援不同類型的音效）
+        // soundType: 'warning' | 'reminder' | 'test' | 'none'
+        function sendNotification(title, body, soundType = 'reminder') {
+            // 開始分頁標題閃爍提醒
+            const flashText = soundType === 'warning' ? '🔮 預警通知！' : '⏰ 分析提醒！';
+            startTitleFlash(flashText);
+
+            // 播放對應音效
+            switch (soundType) {
+                case 'warning':
+                    playWarningSound();
+                    break;
+                case 'reminder':
+                    playReminderSound();
+                    break;
+                case 'test':
+                    playTestSound();
+                    break;
+                // 'none' 或其他：不播放音效
+            }
+
+            // 頁面內提醒
+            const bellIcon = document.getElementById('bell-icon');
+            bellIcon.classList.add('bell-animate');
+            setTimeout(() => bellIcon.classList.remove('bell-animate'), 500);
+
+            // 瀏覽器通知（會讓工作列閃爍）
+            if (notificationPermission === 'granted') {
+                try {
+                    // 使用唯一 tag + renotify 確保每次通知都會讓工作列閃爍
+                    const uniqueTag = `chiller-${soundType}-${Date.now()}`;
+                    const notification = new Notification(title, {
+                        body: body,
+                        icon: 'icon-192.png',  // 使用 PWA 圖示
+                        tag: uniqueTag,
+                        renotify: true,  // 確保工作列閃爍
+                        requireInteraction: true,  // 必須手動點擊才能關閉
+                        silent: true  // 使用我們自己的音效，不用系統音效
+                    });
+
+                    notification.onclick = () => {
+                        window.focus();
+                        notification.close();
+                    };
+
+                    // 移除自動關閉，必須手動確認
+                    // setTimeout(() => notification.close(), 30000);
+                } catch (e) {
+                    console.warn('無法發送通知', e);
+                }
+            }
+
+            // 頁面內彈窗（無論頁面狀態都顯示，確保必須手動確認）
+            setTimeout(() => {
+                const confirmed = confirm(`⏰ ${title}\n\n${body}\n\n點擊「確定」關閉此提醒`);
+                if (confirmed) {
+                    console.log('用戶已確認提醒');
+                }
+            }, 100);
+        }
+
+        // 檢查是否該提醒
+        function checkReminder() {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+
+            // 檢查提前預警分析時間 (07:00, 17:00)
+            for (const preAlert of PRE_ALERT_TIMES) {
+                if (currentHour === preAlert.hour && currentMinute >= 0 && currentMinute <= 5) {
+                    const alertKey = `pre-alert-${now.toDateString()}-${preAlert.hour}`;
+
+                    if (localStorage.getItem(alertKey) !== 'sent') {
+                        localStorage.setItem(alertKey, 'sent');
+
+                        // 觸發預報分析並發送通知
+                        triggerPreAlertAnalysis(preAlert);
+                    }
+                }
+            }
+
+            // 檢查正式提醒時間 (08:00, 12:00, 18:00)
+            for (const time of REMINDER_TIMES) {
+                // 在整點後 0-5 分鐘內觸發（與預警一致）
+                if (currentHour === time.hour && currentMinute >= 0 && currentMinute <= 5) {
+                    const reminderKey = `reminder-${now.toDateString()}-${time.hour}`;
+
+                    if (localStorage.getItem(reminderKey) !== 'sent') {
+                        localStorage.setItem(reminderKey, 'sent');
+
+                        sendNotification(
+                            '🧊 冰水主機分析提醒',
+                            `${time.label}好！現在是 ${time.hour}:00，請進行冰水主機運轉狀態分析。`,
+                            'reminder'  // 正式通知音效
+                        );
+                    }
+                }
+            }
+        }
+
+        // 提前預警分析
+        async function triggerPreAlertAnalysis(preAlert) {
+            console.log(`⚠️ 觸發提前預警分析: ${preAlert.label}`);
+
+            try {
+                // 刷新預報資料
+                await get24HourForecast();
+
+                // 使用 globalWeather 作為目前焓值（與頁面顯示一致）
+                const currentEnthalpy = globalWeather.enthalpy;
+                const currentRule = getRule(currentEnthalpy);
+
+                // 取得未來預測（1 小時後）
+                const futureData = forecastData[1];
+
+                if (futureData) {
+                    const futureRule = getRule(futureData.enthalpy);
+
+                    let alertMessage = `🔮 ${preAlert.label}分析\n\n`;
+                    alertMessage += `目前焓值: ${currentEnthalpy} kJ/kg (規則 ${currentRule})\n`;
+                    alertMessage += `預計 ${preAlert.targetHour}:00 焓值: ${futureData.enthalpy.toFixed(1)} kJ/kg (規則 ${futureRule})\n\n`;
+
+                    if (currentRule !== futureRule) {
+                        alertMessage += `⚠️ 注意！運轉策略將需調整`;
+                    } else {
+                        alertMessage += `✅ 運轉策略無需變更`;
+                    }
+
+                    sendNotification(`🔮 ${preAlert.label} - 提前預警分析`, alertMessage, 'warning');
+                } else {
+                    // 即使沒有預報資料也要發送通知
+                    let alertMessage = `🔮 ${preAlert.label}分析\n\n`;
+                    alertMessage += `目前焓值: ${currentEnthalpy} kJ/kg (規則 ${currentRule})\n\n`;
+                    alertMessage += `即將到 ${preAlert.targetHour}:00 分析時間，請準備進行冰水主機檢查。`;
+                    sendNotification(`🔮 ${preAlert.label}`, alertMessage, 'warning');
+                }
+            } catch (e) {
+                console.error('預警分析失敗:', e);
+                // 發生錯誤也要發送基本通知（使用 globalWeather）
+                const currentEnthalpy = globalWeather.enthalpy;
+                const currentRule = getRule(currentEnthalpy);
+                let alertMessage = `🔮 ${preAlert.label}分析\n\n`;
+                alertMessage += `目前焓值: ${currentEnthalpy} kJ/kg (規則 ${currentRule})\n\n`;
+                alertMessage += `即將到 ${preAlert.targetHour}:00 分析時間，請準備進行冰水主機檢查。`;
+                sendNotification(`🔮 ${preAlert.label}`, alertMessage, 'warning');
+            }
+        }
+
+        // 更新倒數計時顯示
+        function updateCountdown() {
+            const nextReminder = getNextReminderTime();
+            const now = new Date();
+            const diff = nextReminder - now;
+
+            const countdownEl = document.getElementById('next-reminder');
+            const timeStr = nextReminder.getHours() < 12 ? '早上' : '下午';
+            const hourStr = nextReminder.getHours().toString().padStart(2, '0');
+            const minStr = nextReminder.getMinutes().toString().padStart(2, '0');
+
+            countdownEl.textContent = `${timeStr} ${hourStr}:${minStr} (${formatCountdown(diff)})`;
+        }
+
+        // 測試通知功能
+        function testNotification() {
+            if (notificationPermission !== 'granted') {
+                requestNotificationPermission().then(granted => {
+                    if (granted) {
+                        testSWNotification();
+                    } else {
+                        alert('請先允許通知權限！');
+                    }
+                });
+            } else {
+                testSWNotification();
+            }
+        }
+
+        // 測試通知功能
+        function testSWNotification() {
+            // 直接發送通知（不依賴 Service Worker controller）
+            sendNotification('🧊 測試通知', '通知功能運作正常！您會在 08:00、12:00 及 18:00 收到提醒。', 'test');  // 測試音效
+        }
+
+        // 測試正式通知功能
+        function testReminder() {
+            console.log('⏰ 手動觸發正式通知測試');
+            const now = new Date();
+            const hour = now.getHours();
+            const label = hour < 12 ? '早上' : (hour < 17 ? '中午' : '下午');
+
+            sendNotification(
+                '🧊 冰水主機分析提醒',
+                `${label}好！現在是 ${hour}:00，請進行冰水主機運轉狀態分析。`,
+                'reminder'  // 正式通知音效（溫和鈴聲）
+            );
+        }
+
+        // 測試預警功能（手動觸發）
+        function testPreAlert() {
+            console.log('🔮 手動觸發預警測試');
+
+            // 模擬一個預警
+            const testAlert = {
+                hour: new Date().getHours(),
+                minute: 0,
+                label: '預警測試',
+                targetHour: new Date().getHours() + 1
+            };
+
+            // 觸發預警分析（會顯示真實的焓值數據）
+            triggerPreAlertAnalysis(testAlert);
+        }
+
+        // 初始化提醒系統
+        function initReminderSystem() {
+            requestNotificationPermission();
+            updateCountdown();
+
+            // 每秒更新倒數計時
+            setInterval(updateCountdown, 1000);
+
+            // 每 30 秒檢查是否該提醒
+            setInterval(checkReminder, 30000);
+
+            // 立即檢查一次
+            checkReminder();
+
+            // ===== 每 30 分鐘自動刷新 24 小時預測 =====
+            setInterval(() => {
+                console.log('🔄 自動刷新 24 小時預測...');
+                get24HourForecast();
+            }, 30 * 60 * 1000);  // 30 分鐘 = 30 * 60 * 1000 毫秒
+        }
+
+        // 頁面載入後初始化
+        document.addEventListener('DOMContentLoaded', initReminderSystem);
+
+        // 解鎖音訊（用戶首次與頁面互動時）
+        let audioUnlocked = false;
+        async function unlockAudio() {
+            if (audioUnlocked) return;
+            try {
+                const ctx = await getAudioContext();
+                // 播放一個無聲的音訊來解鎖
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                gainNode.gain.value = 0;  // 無聲
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                oscillator.start(0);
+                oscillator.stop(0.001);
+                audioUnlocked = true;
+                console.log('🔓 音訊已解鎖');
+            } catch (e) {
+                console.warn('無法解鎖音訊:', e);
+            }
+        }
+
+        // 在用戶首次點擊任意位置時解鎖音訊
+        document.addEventListener('click', unlockAudio, { once: true });
+        document.addEventListener('touchstart', unlockAudio, { once: true });
+
+        // ==========================================
+        // 5. 24 小時焓值預測功能 (含多層 API Fallback)
+        // ==========================================
+        let forecastData = [];
+        let forecastChartCtx = null;
+        let lastForecastSource = '';  // 記錄資料來源
+
+        // 第一層：嘗試 Open-Meteo API
+        async function tryOpenMeteoAPI() {
+            const lat = 25.0554;
+            const lon = 121.6169;
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);  // 8 秒超時
+
+            try {
+                const res = await fetch(
+                    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m&forecast_days=2&timezone=Asia%2FTaipei`,
+                    { signal: controller.signal }
+                );
+                clearTimeout(timeoutId);
+
+                if (!res.ok) throw new Error('API 回應錯誤');
+
+                const data = await res.json();
+                const hourlyTime = data.hourly?.time || [];
+                const hourlyTemp = data.hourly?.temperature_2m || [];
+                const hourlyHum = data.hourly?.relative_humidity_2m || [];
+
+                if (hourlyTemp.length === 0) throw new Error('無資料');
+
+                const now = new Date();
+                const currentHour = now.getHours();
+
+                forecastData = [];
+                for (let i = 0; i < 24; i++) {
+                    const dataIndex = currentHour + i;
+                    if (dataIndex < hourlyTemp.length) {
+                        const temp = hourlyTemp[dataIndex];
+                        const hum = hourlyHum[dataIndex];
+                        const enthalpy = calculateEnthalpy(temp, hum);
+                        const timeStr = hourlyTime[dataIndex];
+                        const hour = new Date(timeStr).getHours();
+
+                        forecastData.push({
+                            hour: hour,
+                            hoursFromNow: i,
+                            temp: temp,
+                            hum: hum,
+                            enthalpy: enthalpy,
+                            timeStr: timeStr
+                        });
+                    }
+                }
+                // ★ 同步更新即時天氣資料（使用當前小時的資料）
+                if (forecastData.length > 0) {
+                    const currentData = forecastData[0];
+                    setWeatherData(currentData.temp, currentData.hum, 'Open-Meteo 即時天氣');
+                    console.log('🌡️ 即時天氣已同步更新:', currentData.temp + '°C, ' + currentData.hum + '%');
+                }
+
+                lastForecastSource = 'Open-Meteo';
+                console.log('✅ 使用 Open-Meteo API 取得預報');
+                return true;
+
+            } catch (e) {
+                clearTimeout(timeoutId);
+                console.warn('⚠️ Open-Meteo API 失敗:', e.message);
+                return false;
+            }
+        }
+
+        // 第二層：嘗試 wttr.in 備用 API
+        async function tryWttrAPI() {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);  // 10 秒超時
+
+            try {
+                const res = await fetch('https://wttr.in/Taipei?format=j1', {
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (!res.ok) throw new Error('API 回應錯誤');
+
+                const data = await res.json();
+                const weatherDays = data.weather || [];
+
+                if (weatherDays.length === 0) throw new Error('無資料');
+
+                const now = new Date();
+                const currentHour = now.getHours();
+
+                // 收集所有小時資料並建立完整時間序列
+                // wttr.in 提供 3 天資料，每天 8 筆 (0, 3, 6, 9, 12, 15, 18, 21 點)
+                let allHourlyData = [];
+                const todayDate = now.toISOString().slice(0, 10);  // YYYY-MM-DD
+
+                weatherDays.forEach((day, dayIndex) => {
+                    const dayDate = day.date;  // 例如 "2026-01-26"
+                    const hourlyArr = day.hourly || [];
+
+                    hourlyArr.forEach(h => {
+                        const timeValue = parseInt(h.time) / 100;  // "0", "300", "600" -> 0, 3, 6
+                        allHourlyData.push({
+                            date: dayDate,
+                            dayIndex: dayIndex,
+                            hour: timeValue,
+                            absoluteHour: dayIndex * 24 + timeValue,  // 絕對小時數（用於插值）
+                            temp: parseFloat(h.tempC),
+                            hum: parseInt(h.humidity)
+                        });
+                    });
+                });
+
+                // 按絕對小時排序
+                allHourlyData.sort((a, b) => a.absoluteHour - b.absoluteHour);
+
+                console.log('📊 wttr.in 原始資料點:', allHourlyData.map(d =>
+                    `${d.hour}:00 (Day${d.dayIndex}) → ${d.temp}°C, ${d.hum}%`
+                ));
+
+                // 計算現在是今天的第幾個絕對小時
+                const currentAbsoluteHour = currentHour;
+
+                // 線性插值函式
+                function interpolate(x, x1, y1, x2, y2) {
+                    if (x2 === x1) return y1;
+                    return y1 + (y2 - y1) * (x - x1) / (x2 - x1);
+                }
+
+                // 生成未來 24 小時的資料（使用線性插值）
+                forecastData = [];
+                for (let i = 0; i < 24; i++) {
+                    const targetAbsoluteHour = currentAbsoluteHour + i;
+                    const targetDayIndex = Math.floor(targetAbsoluteHour / 24);
+                    const targetHour = targetAbsoluteHour % 24;
+
+                    // 找到包圍目標時間的兩個資料點
+                    let prevPoint = null;
+                    let nextPoint = null;
+
+                    for (let j = 0; j < allHourlyData.length; j++) {
+                        const d = allHourlyData[j];
+                        // 調整 absoluteHour 以對應目標日
+                        const adjustedAbsoluteHour = d.dayIndex * 24 + d.hour;
+
+                        if (adjustedAbsoluteHour <= targetAbsoluteHour) {
+                            prevPoint = { ...d, adjustedHour: adjustedAbsoluteHour };
+                        }
+                        if (adjustedAbsoluteHour >= targetAbsoluteHour && !nextPoint) {
+                            nextPoint = { ...d, adjustedHour: adjustedAbsoluteHour };
+                        }
+                    }
+
+                    // 計算插值後的溫度和濕度
+                    let temp, hum;
+                    if (prevPoint && nextPoint && prevPoint !== nextPoint) {
+                        temp = interpolate(
+                            targetAbsoluteHour,
+                            prevPoint.adjustedHour, prevPoint.temp,
+                            nextPoint.adjustedHour, nextPoint.temp
+                        );
+                        hum = interpolate(
+                            targetAbsoluteHour,
+                            prevPoint.adjustedHour, prevPoint.hum,
+                            nextPoint.adjustedHour, nextPoint.hum
+                        );
+                    } else if (prevPoint) {
+                        temp = prevPoint.temp;
+                        hum = prevPoint.hum;
+                    } else if (nextPoint) {
+                        temp = nextPoint.temp;
+                        hum = nextPoint.hum;
+                    } else {
+                        continue;  // 沒有資料可用
+                    }
+
+                    temp = parseFloat(temp.toFixed(1));
+                    hum = Math.round(hum);
+                    const enthalpy = calculateEnthalpy(temp, hum);
+
+                    // 計算實際日期
+                    const targetDate = new Date(now);
+                    targetDate.setHours(targetDate.getHours() + i);
+
+                    forecastData.push({
+                        hour: targetHour,
+                        hoursFromNow: i,
+                        temp: temp,
+                        hum: hum,
+                        enthalpy: enthalpy,
+                        timeStr: targetDate.toISOString()
+                    });
+                }
+
+                console.log('📈 插值後預報資料:', forecastData.map(d =>
+                    `+${d.hoursFromNow}h (${d.hour}:00) → ${d.temp}°C, ${d.hum}%, 焓值=${d.enthalpy}`
+                ));
+
+                // 確保至少有 12 筆資料
+                if (forecastData.length < 12) throw new Error('資料不足');
+
+                // ★ 同步更新即時天氣資料
+                const currentCondition = data.current_condition?.[0];
+                if (currentCondition) {
+                    const currentTemp = parseFloat(currentCondition.temp_C);
+                    const currentHum = parseInt(currentCondition.humidity);
+                    if (!isNaN(currentTemp) && !isNaN(currentHum)) {
+                        setWeatherData(currentTemp, currentHum, 'wttr.in 即時天氣');
+                        console.log('🌡️ 即時天氣已同步更新:', currentTemp + '°C, ' + currentHum + '%');
+                    }
+                }
+
+                lastForecastSource = 'wttr.in';
+                console.log('✅ 使用 wttr.in 備用 API 取得預報');
+                return true;
+
+            } catch (e) {
+                clearTimeout(timeoutId);
+                console.warn('⚠️ wttr.in 備用 API 失敗:', e.message);
+                return false;
+            }
+        }
+
+        // 第三層：本地估算 fallback
+        function useForecastFallback() {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const month = now.getMonth() + 1;
+
+            // 根據月份和時段估算溫濕度曲線 (台北氣候特性)
+            forecastData = [];
+            for (let i = 0; i < 24; i++) {
+                const hour = (currentHour + i) % 24;
+
+                // 日間溫度曲線 (凌晨最低，午後最高)
+                let baseTemp, baseHum;
+                if (month >= 6 && month <= 9) {
+                    // 夏季
+                    baseTemp = 28 + 5 * Math.sin((hour - 6) * Math.PI / 12);
+                    baseHum = 75 + 10 * Math.cos((hour - 14) * Math.PI / 12);
+                } else if (month >= 12 || month <= 2) {
+                    // 冬季
+                    baseTemp = 14 + 4 * Math.sin((hour - 6) * Math.PI / 12);
+                    baseHum = 70 + 10 * Math.cos((hour - 14) * Math.PI / 12);
+                } else {
+                    // 春秋季
+                    baseTemp = 22 + 5 * Math.sin((hour - 6) * Math.PI / 12);
+                    baseHum = 70 + 10 * Math.cos((hour - 14) * Math.PI / 12);
+                }
+
+                const temp = parseFloat(baseTemp.toFixed(1));
+                const hum = Math.round(Math.max(40, Math.min(95, baseHum)));
+                const enthalpy = calculateEnthalpy(temp, hum);
+
+                forecastData.push({
+                    hour: hour,
+                    hoursFromNow: i,
+                    temp: temp,
+                    hum: hum,
+                    enthalpy: enthalpy,
+                    timeStr: `估算-${hour}:00`
+                });
+            }
+            // ★ 同步更新即時天氣資料
+            if (forecastData.length > 0) {
+                const currentData = forecastData[0];
+                setWeatherData(currentData.temp, currentData.hum, '本地估算天氣');
+                console.log('🌡️ 即時天氣已同步更新（估算）:', currentData.temp + '°C, ' + currentData.hum + '%');
+            }
+
+            lastForecastSource = '本地估算';
+            console.log('ℹ️ 使用本地估算值（無法連線任何 API）');
+            return true;
+        }
+
+        // 主要預報取得函式 (含多層 fallback)
+        async function get24HourForecast() {
+            const statusEl = document.getElementById('forecast-status');
+            statusEl.textContent = '正在取得天氣預報...';
+
+            let success = false;
+
+            // 第一層：嘗試 Open-Meteo API
+            success = await tryOpenMeteoAPI();
+
+            // 第二層：嘗試 wttr.in 備用 API
+            if (!success) {
+                statusEl.textContent = '主要 API 無法連線，嘗試備用來源...';
+                success = await tryWttrAPI();
+            }
+
+            // 第三層：使用本地估算值
+            if (!success) {
+                statusEl.textContent = '所有 API 無法連線，使用本地估算...';
+                useForecastFallback();
+            }
+
+            // 更新狀態顯示
+            const now = new Date();
+            if (lastForecastSource === 'Open-Meteo') {
+                statusEl.textContent = `✓ 更新於 ${now.toLocaleTimeString('zh-TW')}`;
+            } else if (lastForecastSource === 'wttr.in') {
+                statusEl.textContent = `⚡ 備用來源 | ${now.toLocaleTimeString('zh-TW')}`;
+            } else {
+                statusEl.textContent = `⚠️ 估算值 | ${now.toLocaleTimeString('zh-TW')}`;
+            }
+
+            // 繪製圖表
+            drawEnthalpyChart();
+
+            // 生成預警
+            generateForecastAlerts();
+
+            // 儲存分析歷史
+            saveAnalysisHistory();
+
+            return forecastData;
+        }
+
+        // 繪製焓值預測圖表
+        function drawEnthalpyChart() {
+            const canvas = document.getElementById('enthalpy-chart');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+
+            // 設定高解析度
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+
+            const width = rect.width;
+            const height = rect.height;
+
+            // 清除畫布
+            ctx.clearRect(0, 0, width, height);
+
+            if (forecastData.length === 0) return;
+
+            // 使用實際現況焓值作為第一個點
+            const currentEnthalpy = globalWeather.enthalpy || forecastData[0]?.enthalpy || 50;
+
+            // 計算範圍（包含現況焓值）
+            const allEnthalpies = [currentEnthalpy, ...forecastData.slice(1).map(d => d.enthalpy)];
+            const minH = Math.floor(Math.min(...allEnthalpies) / 10) * 10 - 10;
+            const maxH = Math.ceil(Math.max(...allEnthalpies) / 10) * 10 + 10;
+
+            // 繪製參數
+            const padding = { left: 35, right: 10, top: 15, bottom: 25 };
+            const chartWidth = width - padding.left - padding.right;
+            const chartHeight = height - padding.top - padding.bottom;
+
+            // 繪製背景區域 (規則區間)
+            const ruleZones = [
+                { min: 0, max: 56, color: 'rgba(46, 204, 113, 0.2)', label: '規則1' },
+                { min: 56, max: 72, color: 'rgba(41, 128, 185, 0.2)', label: '規則2' },
+                { min: 72, max: 85, color: 'rgba(230, 126, 34, 0.2)', label: '規則3' },
+                { min: 85, max: 95, color: 'rgba(192, 57, 43, 0.2)', label: '規則4' },
+                { min: 95, max: 150, color: 'rgba(142, 68, 173, 0.2)', label: '極限' }
+            ];
+
+            ruleZones.forEach(zone => {
+                if (zone.max > minH && zone.min < maxH) {
+                    const y1 = padding.top + chartHeight - ((Math.min(zone.max, maxH) - minH) / (maxH - minH)) * chartHeight;
+                    const y2 = padding.top + chartHeight - ((Math.max(zone.min, minH) - minH) / (maxH - minH)) * chartHeight;
+                    ctx.fillStyle = zone.color;
+                    ctx.fillRect(padding.left, y1, chartWidth, y2 - y1);
+                }
+            });
+
+            // 繪製規則臨界線
+            const criticalLines = [56, 72, 85, 95];
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+            ctx.lineWidth = 1;
+
+            criticalLines.forEach(h => {
+                if (h >= minH && h <= maxH) {
+                    const y = padding.top + chartHeight - ((h - minH) / (maxH - minH)) * chartHeight;
+                    ctx.beginPath();
+                    ctx.moveTo(padding.left, y);
+                    ctx.lineTo(width - padding.right, y);
+                    ctx.stroke();
+
+                    // 標註數值
+                    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                    ctx.font = '10px sans-serif';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(h.toString(), padding.left - 3, y + 3);
+                }
+            });
+
+            ctx.setLineDash([]);
+
+            // 繪製焓值曲線
+            ctx.beginPath();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+
+            // 繪製曲線：第一點使用現況焓值，其餘使用預報數據
+            const chartData = [currentEnthalpy, ...forecastData.slice(1).map(d => d.enthalpy)];
+            chartData.forEach((enthalpy, i) => {
+                const x = padding.left + (i / (chartData.length - 1)) * chartWidth;
+                const y = padding.top + chartHeight - ((enthalpy - minH) / (maxH - minH)) * chartHeight;
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
+
+            // 繪製數據點：第一點使用現況焓值，其餘使用預報數據
+            chartData.forEach((enthalpy, i) => {
+                const x = padding.left + (i / (chartData.length - 1)) * chartWidth;
+                const y = padding.top + chartHeight - ((enthalpy - minH) / (maxH - minH)) * chartHeight;
+
+                // 選擇顏色
+                let pointColor = '#fff';
+                if (enthalpy >= 95) pointColor = '#9b59b6';
+                else if (enthalpy >= 85) pointColor = '#e74c3c';
+                else if (enthalpy >= 72) pointColor = '#f39c12';
+                else if (enthalpy >= 56) pointColor = '#3498db';
+                else pointColor = '#2ecc71';
+
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = pointColor;
+                ctx.fill();
+            });
+
+            // 繪製 X 軸標籤 (每 4 小時，從第 4 小時開始避免與「現在」重疊)
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'center';
+
+            for (let i = 4; i < forecastData.length; i += 4) {  // 從 i=4 開始，避免與「現在」重疊
+                const d = forecastData[i];
+                const x = padding.left + (i / (chartData.length - 1)) * chartWidth;
+                ctx.fillText(`${d.hour.toString().padStart(2, '0')}:00`, x, height - 5);
+            }
+
+            // 標註「現在」（只顯示「現在」，不顯示時間）
+            ctx.fillStyle = '#ffeaa7';
+            ctx.font = 'bold 10px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('現在', padding.left, height - 5);
+
+            // 繪製 Y 軸數字刻度和橫向格線
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            ctx.font = '10px sans-serif';
+            ctx.textAlign = 'right';
+
+            // 計算刻度間距（每 10 或 20 為一個刻度）
+            const range = maxH - minH;
+            const step = range > 60 ? 20 : 10;
+
+            // 規則臨界線值（已經有標籤了，避免重複標註）
+            const criticalValues = [56, 72, 85, 95];
+
+            for (let h = Math.ceil(minH / step) * step; h <= maxH; h += step) {
+                // 跳過與規則臨界線太接近的刻度（差距 < 5）
+                const tooCloseToeCritical = criticalValues.some(cv => Math.abs(h - cv) < 5 && cv >= minH && cv <= maxH);
+                if (tooCloseToeCritical) continue;
+
+                const y = padding.top + chartHeight - ((h - minH) / (maxH - minH)) * chartHeight;
+
+                // 繪製橫向格線
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([3, 3]);  // 虛線樣式
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(width - padding.right, y);
+                ctx.stroke();
+                ctx.setLineDash([]);  // 重置為實線
+
+                // 繪製數字標籤
+                ctx.fillText(h.toString(), padding.left - 5, y + 3);
+            }
+        }
+
+        // 生成預警提示
+        function generateForecastAlerts() {
+            const alertsContainer = document.getElementById('forecast-alerts');
+            if (!alertsContainer || forecastData.length === 0) return;
+
+            const alerts = [];
+            // 使用實際現況焓值（與外氣環境卡片一致）
+            const currentEnthalpy = globalWeather.enthalpy || forecastData[0]?.enthalpy || 0;
+            const currentRule = getRule(currentEnthalpy);
+
+            // ===== 1. 趨勢分析預警 (未來 6 小時) =====
+            // 追蹤已發出的變化類型，避免重複但允許不同類型的變化
+            const alertedChanges = new Set();
+
+            for (let i = 1; i <= 6 && i < forecastData.length; i++) {
+                const d = forecastData[i];
+                // 關鍵修正：第一個點要與「現況焓值」比較，而非 forecastData[0]
+                const prevEnthalpy = (i === 1) ? currentEnthalpy : forecastData[i - 1]?.enthalpy;
+                const prevRule = getRule(prevEnthalpy);
+                const nextRule = getRule(d.enthalpy);
+
+                // 規則變化預警（只要規則不同就要檢查）
+                if (prevRule !== nextRule) {
+                    const timeStr = `${d.hour.toString().padStart(2, '0')}:00`;
+                    const changeKey = `${prevRule}->${nextRule}`;
+
+                    // 避免同類型變化重複提醒
+                    if (alertedChanges.has(changeKey)) continue;
+
+                    // 規則 1→2 或 2→3：焓值上升越過 56 或 72（需要加開設備）
+                    if (d.enthalpy >= 72 && prevEnthalpy < 72) {
+                        alerts.push({
+                            type: 'warning',
+                            icon: '⚠️',
+                            message: `預計 ${timeStr} 焓值將達 ${d.enthalpy.toFixed(0)}，建議 ${getTimeOffset(d.hour, -30)} 前切換至大冰機`
+                        });
+                        alertedChanges.add(changeKey);
+                    }
+                    // 規則 2→1：焓值下降低於 56（可以減少設備）
+                    else if (d.enthalpy < 56 && prevEnthalpy >= 56) {
+                        alerts.push({
+                            type: 'info',
+                            icon: '💡',
+                            message: `預計 ${timeStr} 焓值將降至 ${d.enthalpy.toFixed(0)}，可切換為 4號小冰單獨運轉（規則1）`
+                        });
+                        alertedChanges.add(changeKey);
+                    }
+                    // 規則 3→4：焓值上升越過 85（高負載）
+                    else if (d.enthalpy >= 85 && prevEnthalpy < 85) {
+                        alerts.push({
+                            type: 'warning',
+                            icon: '🔥',
+                            message: `預計 ${timeStr} 進入高負載區 (焓值 ${d.enthalpy.toFixed(0)})，建議加開小冰機`
+                        });
+                        alertedChanges.add(changeKey);
+                    }
+                    // 規則 4→5：焓值上升越過 95（極限負載）
+                    else if (d.enthalpy >= 95 && prevEnthalpy < 95) {
+                        alerts.push({
+                            type: 'warning',
+                            icon: '🚨',
+                            message: `預計 ${timeStr} 進入極限負載區 (焓值 ${d.enthalpy.toFixed(0)})，建議全開冰機`
+                        });
+                        alertedChanges.add(changeKey);
+                    }
+                    // 規則 3→2：焓值下降低於 72（可以減少設備）
+                    else if (d.enthalpy < 72 && prevEnthalpy >= 72) {
+                        alerts.push({
+                            type: 'info',
+                            icon: '📉',
+                            message: `預計 ${timeStr} 焓值將降至 ${d.enthalpy.toFixed(0)}，可考慮切回小冰機`
+                        });
+                        alertedChanges.add(changeKey);
+                    }
+                    // 規則 1→2：焓值上升越過 56（需要加開設備）
+                    else if (d.enthalpy >= 56 && prevEnthalpy < 56) {
+                        alerts.push({
+                            type: 'info',
+                            icon: '📈',
+                            message: `預計 ${timeStr} 焓值將升至 ${d.enthalpy.toFixed(0)}，建議加開 5號小冰（規則2）`
+                        });
+                        alertedChanges.add(changeKey);
+                    }
+                }
+            }
+
+            // ===== 2. 高焓值持續預警 =====
+            if (currentEnthalpy >= 85) {
+                const highLoadHours = forecastData.filter(d => d.hoursFromNow <= 6 && d.enthalpy >= 85).length;
+                if (highLoadHours >= 4) {
+                    alerts.push({
+                        type: 'warning',
+                        icon: '🌡️',
+                        message: `未來 6 小時內有 ${highLoadHours} 小時維持高負載 (焓值 ≥85)，注意設備負荷`
+                    });
+                }
+            }
+
+            // ===== 3. 即將升溫預警 (2 小時內焓值明顯上升) =====
+            if (forecastData.length >= 3) {
+                const twoHourLater = forecastData[2]?.enthalpy || currentEnthalpy;
+                const enthalpyRise = twoHourLater - currentEnthalpy;
+                if (enthalpyRise >= 8) {
+                    alerts.push({
+                        type: 'warning',
+                        icon: '📈',
+                        message: `未來 2 小時焓值預計上升 ${enthalpyRise.toFixed(0)} (${currentEnthalpy.toFixed(0)} → ${twoHourLater.toFixed(0)})，建議提前準備`
+                    });
+                }
+            }
+
+            // ===== 4. 峰值預警 =====
+            const maxForecast = forecastData.slice(0, 12).reduce((max, d) => d.enthalpy > max.enthalpy ? d : max, forecastData[0]);
+            if (maxForecast.hoursFromNow > 0 && maxForecast.enthalpy >= 80 && maxForecast.enthalpy > currentEnthalpy + 5) {
+                alerts.push({
+                    type: 'info',
+                    icon: '🎯',
+                    message: `預計 ${maxForecast.hour.toString().padStart(2, '0')}:00 達到焓值峰值 ${maxForecast.enthalpy.toFixed(0)}`
+                });
+            }
+
+            // 傍晚降溫提醒 (17:00-19:00)
+            const now = new Date();
+            const currentHour = now.getHours();
+            if (currentHour >= 15 && currentHour <= 17) {
+                const eveningData = forecastData.filter(d => d.hour >= 18 && d.hour <= 20);
+                if (eveningData.length > 0) {
+                    const avgEvening = eveningData.reduce((a, b) => a + b.enthalpy, 0) / eveningData.length;
+                    if (avgEvening < currentEnthalpy - 5) {
+                        alerts.push({
+                            type: 'info',
+                            icon: '🌅',
+                            message: `傍晚降溫中，預計 18:00 後焓值將降至 ${avgEvening.toFixed(0)}，可考慮減載`
+                        });
+                    }
+                }
+            }
+
+            // 顯示預警
+            if (alerts.length === 0) {
+                // 即使沒有規則變化預警，仍顯示當前運轉建議
+                let currentAdvice = '';
+                if (currentEnthalpy >= 95) {
+                    currentAdvice = '🔴 極限負載：建議 1台大冰 + 2台小冰（全開）';
+                } else if (currentEnthalpy >= 85) {
+                    currentAdvice = '🟠 規則4：建議 1台大冰(100%) + 加開4號小冰';
+                } else if (currentEnthalpy >= 72) {
+                    currentAdvice = '🟡 規則3：建議切換至1台大冰';
+                } else if (currentEnthalpy >= 56) {
+                    currentAdvice = '🔵 規則2：建議 4號小冰 + 加開5號小冰';
+                } else {
+                    currentAdvice = '🟢 規則1：建議 4號小冰單獨運轉';
+                }
+                alertsContainer.innerHTML = `<div class="forecast-alert info">📊 現況焓值 ${currentEnthalpy.toFixed(1)} | ${currentAdvice}</div><div class="forecast-alert info" style="opacity:0.8;">✅ 未來 6 小時預測無規則變化</div>`;
+            } else {
+                // 取得當前運轉建議（用於通知內容）
+                let currentAdvice = '';
+                if (currentEnthalpy >= 95) {
+                    currentAdvice = '極限負載：建議 1台大冰 + 2台小冰（全開）';
+                } else if (currentEnthalpy >= 85) {
+                    currentAdvice = '規則4：建議 1台大冰(100%) + 加開4號小冰';
+                } else if (currentEnthalpy >= 72) {
+                    currentAdvice = '規則3：建議切換至1台大冰';
+                } else if (currentEnthalpy >= 56) {
+                    currentAdvice = '規則2：建議 4號小冰 + 加開5號小冰';
+                } else {
+                    currentAdvice = '規則1：建議 4號小冰單獨運轉';
+                }
+                const currentStatus = `📊 現況焓值 ${currentEnthalpy.toFixed(1)} | ${currentAdvice}`;
+
+                alertsContainer.innerHTML = alerts.map(a =>
+                    `<div class="forecast-alert ${a.type}">${a.icon} ${a.message}</div>`
+                ).join('');
+
+                // 發送瀏覽器通知 (所有預警都會彈窗)
+                const warningAlerts = alerts.filter(a => a.type === 'warning');
+                const infoAlerts = alerts.filter(a => a.type === 'info');
+
+                // 每 30 分鐘可通知一次（配合刷新頻率）
+                const lastForecastNotify = localStorage.getItem('lastForecastNotify') || '';
+                const halfHour = Math.floor(now.getMinutes() / 30);
+                const currentKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${now.getHours()}-${halfHour}`;
+
+                if (lastForecastNotify !== currentKey) {
+                    localStorage.setItem('lastForecastNotify', currentKey);
+
+                    // 警告類型預警（急促音效）- 加入現況資訊
+                    if (warningAlerts.length > 0) {
+                        const allWarnings = warningAlerts.map(a => `${a.icon} ${a.message}`).join('\n');
+                        sendNotification(
+                            '🔮 趨勢分析預警',
+                            `${currentStatus}\n\n${allWarnings}`,
+                            'warning'  // 急促警告音
+                        );
+                    }
+
+                    // 提示類型預警（溫和音效）- 延遲 2 秒避免同時彈窗，加入現況資訊
+                    if (infoAlerts.length > 0) {
+                        setTimeout(() => {
+                            const allInfos = infoAlerts.map(a => `${a.icon} ${a.message}`).join('\n');
+                            sendNotification(
+                                '💡 智能分析提醒',
+                                `${currentStatus}\n\n${allInfos}`,
+                                'reminder'  // 溫和鈴聲
+                            );
+                        }, warningAlerts.length > 0 ? 2000 : 0);
+                    }
+                }
+            }
+        }
+
+        // 取得焓值對應的規則編號
+        function getRule(enthalpy) {
+            if (enthalpy >= 95) return 5;
+            if (enthalpy >= 85) return 4;
+            if (enthalpy >= 72) return 3;
+            if (enthalpy >= 56) return 2;
+            return 1;
+        }
+
+        // 計算時間偏移
+        function getTimeOffset(hour, minutes) {
+            const date = new Date();
+            date.setHours(hour);
+            date.setMinutes(0);
+            date.setMinutes(date.getMinutes() + minutes);
+            return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+        }
+
+        // 儲存分析歷史到 localStorage
+        function saveAnalysisHistory() {
+            if (forecastData.length === 0) return;
+
+            const now = new Date();
+            const key = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}`;
+
+            const currentData = forecastData[0];
+            const historyEntry = {
+                enthalpy: currentData.enthalpy,
+                temp: currentData.temp,
+                hum: currentData.hum,
+                rule: getRule(currentData.enthalpy),
+                timestamp: now.toISOString()
+            };
+
+            // 讀取現有歷史
+            let history = {};
+            try {
+                history = JSON.parse(localStorage.getItem('chillerHistory') || '{}');
+            } catch (e) {
+                history = {};
+            }
+
+            // 新增紀錄
+            history[key] = historyEntry;
+
+            // 只保留最近 7 天的數據
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            const cutoffDate = sevenDaysAgo.toISOString().slice(0, 10);
+
+            Object.keys(history).forEach(k => {
+                if (k < cutoffDate) {
+                    delete history[k];
+                }
+            });
+
+            localStorage.setItem('chillerHistory', JSON.stringify(history));
+        }
+
+        // ===== 測試預警功能 =====
+        function testForecastAlerts() {
+            const alertsContainer = document.getElementById('forecast-alerts');
+            if (!alertsContainer) return alert('找不到預警容器！');
+
+            // 模擬不同類型的預警
+            const testAlerts = [
+                { type: 'warning', icon: '⚠️', message: '【測試】預計 14:00 焓值將達 75，建議 13:30 前切換至大冰機' },
+                { type: 'warning', icon: '🔥', message: '【測試】預計 15:00 進入高負載區 (焓值 88)，建議加開小冰機' },
+                { type: 'info', icon: '📈', message: '【測試】未來 2 小時焓值預計上升 10 (70 → 80)，建議提前準備' },
+                { type: 'info', icon: '🎯', message: '【測試】預計 16:00 達到焓值峰值 92' },
+                { type: 'info', icon: '💡', message: '【測試】預計 20:00 焓值將降至 52，可關閉大冰機節能' }
+            ];
+
+            // 顯示所有測試預警
+            alertsContainer.innerHTML =
+                '<div class="forecast-alert info" style="background: #fff3cd; border-left-color: #f39c12;">🧪 測試模式 - 以下為模擬預警</div>' +
+                testAlerts.map(a =>
+                    `<div class="forecast-alert ${a.type}">${a.icon} ${a.message}</div>`
+                ).join('');
+
+            // 更新狀態
+            document.getElementById('forecast-status').textContent = '🧪 測試預警已觸發 - 5 秒後恢復正常';
+
+            // 5 秒後恢復正常預警
+            setTimeout(() => {
+                generateForecastAlerts();
+                document.getElementById('forecast-status').textContent = '✓ 已恢復正常預警顯示';
+            }, 5000);
+
+            // 發送測試通知（如果有權限）
+            if (notificationPermission === 'granted') {
+                sendNotification('🧪 預警測試', '測試預警功能運作正常！');
+            }
+
+            console.log('✅ 預警測試完成，共顯示', testAlerts.length, '條測試預警');
+        }
+
+        // 刷新預報
+        function refresh24HourForecast() {
+            const btn = event?.target?.closest('button');
+            if (btn) {
+                btn.classList.add('is-loading');
+                setTimeout(() => btn.classList.remove('is-loading'), 1000);
+            }
+            get24HourForecast();
+        }
+
+        // 初始化預測系統
+        function initForecastSystem() {
+            get24HourForecast();
+
+            // 每 30 分鐘更新一次預報
+            setInterval(get24HourForecast, 30 * 60 * 1000);
+
+            // 視窗大小改變時重繪圖表
+            window.addEventListener('resize', () => {
+                if (forecastData.length > 0) {
+                    drawEnthalpyChart();
+                }
+            });
+        }
+
+        // 頁面載入後初始化預測系統
+        document.addEventListener('DOMContentLoaded', initForecastSystem);
+
+
+        const MODEL_FALLBACK_LIST = [
+            // Google 系列
+            "google/gemini-2.0-flash-exp:free",
+            "google/gemma-3-4b-it:free",
+            // Meta Llama 系列
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "meta-llama/llama-3.2-11b-vision-instruct:free",
+            "meta-llama/llama-3.2-3b-instruct:free",
+            // Mistral 系列
+            "mistralai/mistral-small-3.1-24b-instruct:free",
+            "mistralai/devstral-2512:free",
+            // Qwen 系列
+            "qwen/qwen-2.5-vl-72b-instruct:free",
+            "qwen/qwen-2.5-72b-instruct:free",
+            "qwen/qwen-2-7b-instruct:free",
+            // 其他模型
+            "nvidia/llama-3.1-nemotron-70b-instruct:free",
+            "microsoft/phi-3-medium-128k-instruct:free",
+            "allenai/olmo-3.1-32b-think:free",
+            "xiaomi/mimo-v2-flash:free"
+        ];
+
+        // ==========================================
+        // 1. 焓值與規則 (Local Logic)
+        // ==========================================
+        function calculateEnthalpy(temp, rh) {
+            if (!temp || !rh) return 0;
+            const Es = 6.112 * Math.exp((17.67 * temp) / (temp + 243.5));
+            const E = Es * (rh / 100);
+            const w = 0.622 * E / (1013.25 - E);
+            const h = 1.006 * temp + w * (2501 + 1.86 * temp);
+            return parseFloat(h.toFixed(1));
+        }
+
+        function runRuleEngine() {
+            try {
+                const h = globalWeather.enthalpy;
+
+                let color = "#bdc3c7";
+                let title = "等待條件...";
+                let content = "";
+
+                // --- 根據焓值自動判斷規則 ---
+                if (h >= 95) {
+                    color = "#8e44ad";
+                    title = `【極限負載】 外氣焓值 ${h} (≧ 95)`;
+                    content = `<ul><li>運轉建議：<span class="tag-machine">1台大冰</span> + <span class="tag-machine">2台小冰</span> (全開)。</li><li>指令：確保散熱效率最大化。</li></ul>`;
+                } else if (h >= 85 && h <= 94) {
+                    color = "#c0392b";
+                    title = `【規則 4】 外氣焓值 ${h} (85~94)`;
+                    content = `<ul><li>運轉建議：<span class="tag-machine">1台大冰</span> (100%) + 加開 <span class="tag-machine">4號小冰</span>。</li><li>水泵：大泵48Hz，小泵40~42Hz。</li></ul>`;
+                } else if (h >= 72 && h <= 84) {
+                    color = "#e67e22";
+                    title = `【規則 3】 外氣焓值 ${h} (72~84)`;
+                    content = `<ul><li>操作指令：<span class="tag-action">切換至一台大冰</span> (1號或2號)。</li><li>水泵：上限 48Hz。</li></ul>`;
+                } else if (h >= 56 && h < 72) {
+                    color = "#2980b9";
+                    title = `【規則 2】 外氣焓值 ${h} (56~71)`;
+                    content = `<ul><li>運轉建議：<span class="tag-machine">4號小冰</span> + <span class="tag-machine">加開 5號小冰</span>。</li><li>水泵：上限 40Hz。</li></ul>`;
+                } else if (h < 56) {
+                    color = "#27ae60";
+                    title = `【規則 1】 外氣焓值 ${h} (< 56)`;
+                    content = `<ul><li>運轉建議：<span class="tag-machine">4號小冰</span> 單獨運轉。</li><li>水泵：上限 45Hz。</li></ul>`;
+                }
+
+                document.getElementById("rule-output").innerHTML = `
+                <div class="rule-box" style="border-left-color: ${color};">
+                    <span class="rule-title" style="color:${color}">${title}</span>
+                    <div class="rule-content">${content}</div>
+                </div>`;
+
+            } catch (e) { console.error("規則運算錯誤:", e); }
+        }
+
+
+        // ==========================================
+        // 2. 天氣初始化 (手機版修正 - 完整錯誤處理)
+        // ==========================================
+
+        // 顯示定位狀態訊息
+        function showLocationStatus(message, isError = false) {
+            const statusEl = document.getElementById("location-status");
+            if (statusEl) {
+                statusEl.innerText = message;
+                statusEl.style.color = isError ? "#ff6b6b" : "#ffeaa7";
+            }
+        }
+
+        function setWeatherData(t, rh, source = "南港區") {
+            const h = calculateEnthalpy(t, rh);
+            document.getElementById("w-temp").innerText = t;
+            document.getElementById("w-hum").innerText = rh;
+            document.getElementById("w-h").innerText = h;
+            globalWeather = { temp: t, hum: rh, enthalpy: h };
+            showLocationStatus(`✓ ${source}`);
+            runRuleEngine();
+
+            // 天氣數據更新後，同步更新 24 小時預測圖表和預警
+            // 確保圖表第一點和預警使用最新的現況焓值
+            if (forecastData.length > 0) {
+                drawEnthalpyChart();
+                generateForecastAlerts();
+            }
+        }
+
+        // 取得台北市南港區天氣
+        async function getNangangWeather() {
+            try {
+                showLocationStatus("正在取得南港區天氣...");
+                // 台北市南港區座標
+                const lat = 25.0554;
+                const lon = 121.6169;
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=relative_humidity_2m`);
+                if (!res.ok) throw new Error("API 回應錯誤");
+                const data = await res.json();
+                const t = data.current_weather?.temperature;
+                const rh = data.hourly?.relative_humidity_2m?.[new Date().getHours()];
+                if (t !== undefined && rh !== undefined) {
+                    setWeatherData(t, rh, "南港區即時天氣");
+                    return true;
+                }
+            } catch (e) {
+                console.warn("天氣 API 失敗", e);
+            }
+            return false;
+        }
+
+        // 使用本地預設值 (完全不需要網路)
+        function useLocalDefault() {
+            // 根據月份估算合理的溫濕度預設值 (台灣氣候)
+            const month = new Date().getMonth() + 1;
+            let temp, hum;
+
+            if (month >= 6 && month <= 9) {
+                // 夏季 (6-9月)
+                temp = 30 + Math.random() * 4; // 30-34°C
+                hum = 70 + Math.random() * 15;  // 70-85%
+            } else if (month >= 12 || month <= 2) {
+                // 冬季 (12-2月)
+                temp = 15 + Math.random() * 5; // 15-20°C
+                hum = 65 + Math.random() * 15;  // 65-80%
+            } else {
+                // 春秋季
+                temp = 22 + Math.random() * 6; // 22-28°C
+                hum = 65 + Math.random() * 15;  // 65-80%
+            }
+
+            temp = parseFloat(temp.toFixed(1));
+            hum = Math.round(hum);
+
+            setWeatherData(temp, hum, `南港區估算值 (${month}月)`);
+        }
+
+        // 初始化天氣（固定使用南港區）
+        async function initWeather() {
+            showLocationStatus("正在取得南港區天氣...");
+
+            const success = await getNangangWeather();
+            if (!success) {
+                showLocationStatus("⚠️ 網路受限，使用本地估算", true);
+                useLocalDefault();
+            }
+        }
+
+        // 啟動
+        initWeather();
+
+        // ==========================================
+        // 3. AI 視覺分析
+        // ==========================================
+
+        async function callAIModel(modelName, prompt) {
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${userApiKey}`, "Content-Type": "application/json", "HTTP-Referer": window.location.href },
+                body: JSON.stringify({
+                    model: modelName,
+                    messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: globalBase64 } }] }]
+                })
+            });
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.message);
+            if (!data.choices || !data.choices.length) throw new Error("無回應");
+            return data.choices[0].message.content;
+        }
+
+        async function tryAnalysisRecursive(modelIndex, prompt) {
+            if (modelIndex >= MODEL_FALLBACK_LIST.length) throw new Error("所有 AI 模型繁忙，請稍後再試。");
+            const loadingText = document.getElementById("loading-text");
+            loadingText.innerText = `AI 分析中 (嘗試模型 ${modelIndex + 1})...`;
+
+            try {
+                return await callAIModel(MODEL_FALLBACK_LIST[modelIndex], prompt);
+            } catch (error) {
+                console.warn(`Model failed`, error);
+                return await tryAnalysisRecursive(modelIndex + 1, prompt);
+            }
+        }
+
+        document.getElementById("inputImages").addEventListener("change", (e) => {
+            if (e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    document.getElementById("preview-area").innerHTML = `<img src="${evt.target.result}">`;
+                    globalBase64 = evt.target.result;
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        document.getElementById("reset-key-button").addEventListener("click", () => {
+            const key = prompt("輸入 OpenRouter API Key:", userApiKey);
+            if (key) { userApiKey = key.trim(); localStorage.setItem("openrouter_key", userApiKey); }
+        });
+
+        document.getElementById("analyze-button").addEventListener("click", async () => {
+            if (!globalBase64) return alert("請先上傳圖片！");
+            if (!userApiKey) {
+                userApiKey = prompt("請輸入 API Key (OpenRouter):");
+                if (!userApiKey) return;
+                localStorage.setItem("openrouter_key", userApiKey);
+            }
+
+            const overlay = document.getElementById("loading-overlay");
+            const reportDiv = document.getElementById("analysis-report");
+            overlay.style.display = "flex";
+
+            try {
+                const prompt = `
+            請快速判讀這張冰水主機 SCADA 畫面。
+
+            【任務】只需判斷 CHU-G01、CHU-G02、CHU-G03、CHU-G04、CHU-G05 這五台主機的運轉狀態。
+            【判斷標準】亮綠燈 = 運轉中，非綠燈 = 停止。
+            
+            【目前條件】焓值 ${globalWeather.enthalpy} kJ/kg
+
+            請用以下格式回答：
+            ✅ 運轉中：CHU-Gxx, CHU-Gxx（列出亮綠燈的主機）
+            ⏸️ 停止中：CHU-Gxx（列出非綠燈的主機）
+            📊 運轉台數：X 台
+            💡 節能建議：根據焓值 ${globalWeather.enthalpy}，簡短說明是否符合節能邏輯。
+            `;
+
+                const result = await tryAnalysisRecursive(0, prompt);
+                reportDiv.innerHTML = result.replace(/\n/g, "<br>");
+
+                // 初始化進階對話
+                initChatAfterAnalysis(result);
+
+            } catch (err) {
+                reportDiv.innerHTML = `<span style="color:red; font-weight:bold;">❌ 分析失敗：${err.message}</span>`;
+            } finally {
+                overlay.style.display = "none";
+            }
+        });
+
+        // ==========================================
+        // 4. 進階 AI 對話功能
+        // ==========================================
+        let chatHistory = [];
+        let initialAnalysisResult = '';
+
+        function initChatAfterAnalysis(analysisResult) {
+            initialAnalysisResult = analysisResult;
+            chatHistory = [
+                {
+                    role: "system",
+                    content: `你是冰水主機專家 AI 助手。以下是你剛才對 SCADA 畫面的初步分析結果：
+${analysisResult}
+
+目前環境條件：焓值 ${globalWeather.enthalpy} kJ/kg，溫度 ${globalWeather.temp}°C，濕度 ${globalWeather.hum}%。
+
+【重要限制】
+1. 你只能回答與以下主題相關的問題：
+   - 畫面上顯示的冰水主機運轉狀態
+   - 節能建議與分析結果
+   - 焓值與環境條件的解釋
+   - 冰水主機的運轉操作建議
+
+2. 如果使用者詢問與上述主題無關的問題，請禮貌地回覆：
+   「抱歉，我只能回答與目前冰水主機分析結果相關的問題。請針對畫面上的分析結果提問。」
+
+【接受糾正】
+如果使用者指出你的分析判斷有誤（例如：主機運轉狀態判讀錯誤、綠燈誤判等），請：
+1. 禮貌地接受糾正並感謝使用者
+2. 根據使用者提供的正確資訊，重新調整你的分析結論
+3. 基於修正後的狀態，更新節能建議
+
+使用繁體中文，回答簡潔明瞭。`
+                }
+            ];
+
+            // 顯示對話區塊
+            const chatSection = document.getElementById('chat-section');
+            chatSection.style.display = 'block';
+
+            // 清空並添加歡迎訊息
+            const messagesDiv = document.getElementById('chat-messages');
+            messagesDiv.innerHTML = '';
+            appendMessage('system', '✅ 初步分析完成！您可以針對分析結果提出進一步的問題。');
+
+            // 滾動到對話區塊
+            chatSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function appendMessage(role, content) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble ${role}`;
+            bubble.innerHTML = content.replace(/\n/g, '<br>');
+            messagesDiv.appendChild(bubble);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const messagesDiv = document.getElementById('chat-messages');
+            const indicator = document.createElement('div');
+            indicator.id = 'typing-indicator';
+            indicator.className = 'chat-bubble ai';
+            indicator.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+            messagesDiv.appendChild(indicator);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+        }
+
+        async function sendChatMessage(customMessage = null) {
+            const input = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('chat-send');
+            const message = customMessage || input.value.trim();
+
+            if (!message) return;
+            if (!userApiKey) {
+                alert('請先設定 API Key！');
+                return;
+            }
+
+            // 顯示使用者訊息
+            appendMessage('user', message);
+            if (!customMessage) input.value = '';
+
+            // 添加到歷史
+            chatHistory.push({ role: 'user', content: message });
+
+            // 禁用輸入
+            input.disabled = true;
+            sendBtn.disabled = true;
+            showTypingIndicator();
+
+            try {
+                // 使用備援模型機制
+                let aiReply = null;
+                let lastError = null;
+
+                for (let i = 0; i < MODEL_FALLBACK_LIST.length; i++) {
+                    try {
+                        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                            method: "POST",
+                            headers: {
+                                "Authorization": `Bearer ${userApiKey}`,
+                                "Content-Type": "application/json",
+                                "HTTP-Referer": window.location.href
+                            },
+                            body: JSON.stringify({
+                                model: MODEL_FALLBACK_LIST[i],
+                                messages: chatHistory
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.error) throw new Error(data.error.message);
+                        if (!data.choices || !data.choices.length) throw new Error('無回應');
+
+                        aiReply = data.choices[0].message.content;
+                        break; // 成功就跳出迴圈
+                    } catch (modelErr) {
+                        console.warn(`對話模型 ${i + 1} 失敗:`, modelErr.message);
+                        lastError = modelErr;
+                        // 繼續嘗試下一個模型
+                    }
+                }
+
+                hideTypingIndicator();
+
+                if (!aiReply) {
+                    throw lastError || new Error('所有模型都無法回應');
+                }
+
+                chatHistory.push({ role: 'assistant', content: aiReply });
+                appendMessage('ai', aiReply);
+
+            } catch (err) {
+                hideTypingIndicator();
+                appendMessage('system', `❌ 錯誤：${err.message}`);
+            } finally {
+                input.disabled = false;
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        function askQuickQuestion(question) {
+            sendChatMessage(question);
+        }
+
+        function handleChatKeypress(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        }
+
+        function clearChat() {
+            if (confirm('確定要清除對話記錄嗎？')) {
+                const messagesDiv = document.getElementById('chat-messages');
+                messagesDiv.innerHTML = '';
+                chatHistory = chatHistory.slice(0, 1); // 保留 system prompt
+                appendMessage('system', '對話已清除。您可以繼續提問。');
+            }
+        }
+
+        // ==========================================
+        // PWA Service Worker 註冊 (含背景同步)
+        // ==========================================
+        let swRegistration = null;
+
+        async function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    // 使用版本號確保 Service Worker 更新
+                    const swUrl = `sw.js?v=${window.CACHE_BUSTER || Date.now()}`;
+                    swRegistration = await navigator.serviceWorker.register(swUrl);
+                    console.log('✅ Service Worker 註冊成功 (版本:', window.CACHE_BUSTER, ')');
+
+                    // 等待 Service Worker 啟用
+                    await navigator.serviceWorker.ready;
+                    console.log('✅ Service Worker 已啟用');
+
+                    // 嘗試註冊定期背景同步 (Chrome 限定)
+                    if ('periodicSync' in swRegistration) {
+                        try {
+                            const status = await navigator.permissions.query({ name: 'periodic-background-sync' });
+                            if (status.state === 'granted') {
+                                await swRegistration.periodicSync.register('check-chiller-reminder', {
+                                    minInterval: 60 * 60 * 1000 // 每小時檢查
+                                });
+                                console.log('✅ 定期背景同步已註冊');
+                            } else {
+                                console.log('⚠️ 定期背景同步權限未授予');
+                            }
+                        } catch (e) {
+                            console.log('⚠️ 定期背景同步不可用:', e.message);
+                        }
+                    }
+
+                    // 註冊一次性背景同步
+                    if ('sync' in swRegistration) {
+                        try {
+                            await swRegistration.sync.register('sync-reminder');
+                            console.log('✅ 一次性背景同步已註冊');
+                        } catch (e) {
+                            console.log('⚠️ 背景同步不可用:', e.message);
+                        }
+                    }
+
+                } catch (err) {
+                    console.log('Service Worker 註冊失敗:', err);
+                }
+            }
+        }
+
+        // 頁面關閉前觸發同步
+        window.addEventListener('beforeunload', async () => {
+            if (swRegistration && 'sync' in swRegistration) {
+                try {
+                    await swRegistration.sync.register('sync-reminder');
+                } catch (e) {
+                    // 無法同步，忽略
+                }
+            }
+        });
+
+        // 頁面載入後註冊
+        window.addEventListener('load', registerServiceWorker);
+    </script>
+</body>
+
+</html>
