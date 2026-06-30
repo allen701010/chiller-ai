@@ -55,19 +55,19 @@ function runRuleEngine() {
             color = "#8e44ad";
             title = `【極限負載】 外氣焓值 ${h} (≧ 95)`;
             content = `<ul><li>運轉建議：<span class="tag-machine">1台大冰</span> + <span class="tag-machine">2台小冰</span> (全開)。</li><li>指令：確保散熱效率最大化。</li></ul>`;
-        } else if (h >= 85 && h <= 94) {
+        } else if (h >= 85) {
             color = "#c0392b";
-            title = `【規則 4】 外氣焓值 ${h} (85~94)`;
+            title = `【規則 4】 外氣焓值 ${h} (85~95)`;
             content = `<ul><li>運轉建議：<span class="tag-machine">1台大冰</span> (100%) + 加開 <span class="tag-machine">4號小冰</span>。</li><li>水泵：大泵48Hz，小泵40~42Hz。</li></ul>`;
-        } else if (h >= 72 && h <= 84) {
+        } else if (h >= 72) {
             color = "#e67e22";
-            title = `【規則 3】 外氣焓值 ${h} (72~84)`;
+            title = `【規則 3】 外氣焓值 ${h} (72~85)`;
             content = `<ul><li>操作指令：<span class="tag-action">切換至一台大冰</span> (1號或2號)。</li><li>水泵：上限 48Hz。</li></ul>`;
-        } else if (h >= 56 && h < 72) {
+        } else if (h >= 56) {
             color = "#2980b9";
-            title = `【規則 2】 外氣焓值 ${h} (56~71)`;
+            title = `【規則 2】 外氣焓值 ${h} (56~72)`;
             content = `<ul><li>運轉建議：<span class="tag-machine">4號小冰</span> + <span class="tag-machine">加開 5號小冰</span>。</li><li>水泵：上限 40Hz。</li></ul>`;
-        } else if (h < 56) {
+        } else {
             color = "#27ae60";
             title = `【規則 1】 外氣焓值 ${h} (< 56)`;
             content = `<ul><li>運轉建議：<span class="tag-machine">4號小冰</span> 單獨運轉。</li><li>水泵：上限 45Hz。</li></ul>`;
