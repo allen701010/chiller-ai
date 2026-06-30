@@ -28,10 +28,22 @@ async function registerServiceWorker() {
                         });
                         console.log('✅ 定期背景同步已註冊');
                     } else {
-                        console.log('⚠️ 定期背景同步權限未授予');
+                        console.log('ℹ️ 定期背景同步需將網站安裝為 PWA 並累積互動後自動啟用，目前使用前台定時器替代');
+                        // 替代方案：使用 setInterval 每小時透過 SW 觸發檢查
+                        setInterval(() => {
+                            if (navigator.serviceWorker.controller) {
+                                navigator.serviceWorker.controller.postMessage({ type: 'CHECK_NOW' });
+                                console.log('🔄 定時替代同步：已通知 SW 執行檢查');
+                            }
+                        }, 60 * 60 * 1000);
                     }
                 } catch (e) {
-                    console.log('⚠️ 定期背景同步不可用:', e.message);
+                    console.log('ℹ️ 定期背景同步不可用，使用前台定時器替代:', e.message);
+                    setInterval(() => {
+                        if (navigator.serviceWorker.controller) {
+                            navigator.serviceWorker.controller.postMessage({ type: 'CHECK_NOW' });
+                        }
+                    }, 60 * 60 * 1000);
                 }
             }
 
